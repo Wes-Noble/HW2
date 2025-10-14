@@ -1,0 +1,13 @@
+---
+title: "ESM 245 HW #1"
+author: "Wesley Noble"
+format: 
+  html:
+    code-folding: show
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+## Libraries
