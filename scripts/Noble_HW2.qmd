@@ -1,13 +1,71 @@
 ---
-title: "ESM 245 HW #1"
+title: "ESM 245: Cost Benefit Analysis HW #2"
 author: "Wesley Noble"
 format: 
   html:
     code-folding: show
     embed-resources: true
+    toc: true
 execute:
   warning: false
   message: false
 ---
 
 ## Libraries
+```{r}
+library(tidyverse)
+library(here)
+library(kableExtra)
+```
+
+## Data
+```{r}
+data <- read_csv(here("data", "df_peru.csv"))
+```
+
+## Guided Diff-in-Diff
+```{r}
+puru_df <- data %>%
+  mutate(log_landing = log(landing),
+         post = ifelse(year >= 2009, 1, 0)) %>%
+  mutate(north = ifelse(zone == "CN", 1, 0)) %>%
+  mutate(did = post * north)
+  
+```
+
+## Linear Regression
+```{r}
+model <- lm(log_landing ~ north + post + did, data = puru_df)
+
+model
+```
+
+What does the coefficient of "did" mean. It is -0.1761, so we can say that the landing in the northern zone decreased by 17.61% after the policy was implemented in 2009.
+
+## Analysis
+
+**Question 1:** *We used the South as a counterfactual region because the policy wasn't applied there. Describe one or more possible problems with this assumption.*
+
+One possible problem with this assumption is that there may be other factors that are affecting the landing in the northern zone that are not present in the southern zone. For example, there may be differences in the fishing practices, environmental conditions, or economic factors that are unique to the northern zone. If these factors are not accounted for, it could lead to an inaccurate estimation of the policy's effect.
+
+**Question 2:** *To analyze whether the counterfactual makes sense, take the mean of log_landing before and
+after the policy for each zone (Remember Andrew's lecture on counterfactuals). Show your
+results in a table.*
+
+```{r}
+puru_summary <- puru_df %>%
+  group_by(zone, post) %>%
+  summarize(mean_log_landing = mean(log_landing, na.rm = TRUE)) %>%
+  pivot_wider(names_from = post, values_from = mean_log_landing, names_prefix = "post_") %>%
+  rename(Zone = zone, `Pre-Policy Mean` = post_0, `Post-Policy Mean` = post_1)
+
+puru_summary %>%
+  kable(caption = "Mean Log Landing Before and After Policy by Zone") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+**Question 3** *Does the assumption of parallel trends seem to hold? What are the implications of this for your analysis?*
+
+Based on the table, we can see that the mean log landing in the northern zone decreased from 4.913642 to 4.908651 after the policy was implemented, while the mean log landing in the southern zone increased from 4.602651 to 4.773809. This suggests that the assumption of parallel trends may not hold, as the trends in log landing for the two zones appear to be diverging rather than parallel. If the assumption of parallel trends does not hold, it could lead to biased estimates of the policy's effect, as the differences in trends may be due to factors other than the policy itself. This highlights the importance of carefully considering the choice of counterfactual region and ensuring that it is appropriate for the analysis.
+
+
